@@ -11,6 +11,7 @@ flask-migrate = "*"
 python-dotenv = "*"
 flask-script = "*"
 "psycopg2-binary" = "*"
+flask-restful = "*"
 
 [dev-packages]
 pylint = "*"

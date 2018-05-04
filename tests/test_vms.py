@@ -25,9 +25,8 @@ class VMSTestCase (unittest.TestCase):
                                 data=json.dumps(self.visitor_info),
                                 content_type='application/json')
         res_data = json.loads(res.data)
-
         self.assertEqual(res.status_code, 201)
-        assert res_data['timeIn'] != 'None'
+        assert res_data['data']['timeIn'] != 'None'
     
     def test_can_view_visitor_logs(self):
         res = self.client.get("/api/v1/visitor-logs/")

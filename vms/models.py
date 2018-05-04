@@ -16,6 +16,17 @@ class VisitorLog(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def save_data(self, data):
+        self.visitor_name = data.get("visitorName")
+        self.host_name = data.get("hostName")
+        self.purpose = data.get("purpose")
+        self.card_number = data.get("cardNumber")
+        self.save()
+        
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
     def to_dict(self):
         return {
             'id': self.id,
