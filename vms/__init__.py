@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, json, make_response
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from .config import app_config
+from .validation import is_empty
 
 db = SQLAlchemy()
 
@@ -26,17 +27,53 @@ def create_app(config_name):
                 if log:
                     return jsonify(data=log.to_dict())
                 else:
-                    return make_response(jsonify(error="Resource not found"), 404)
+                    return make_response(jsonify(error="Resource not found."), 404)
             logs = VisitorLog.query.all()
             return jsonify(
                 data=[e.to_dict() for e in logs]
             )
 
-        def post(self):
+        def post(self, id=None):
+            if id:
+                return make_response(jsonify(error="Resource not found."), 404)
+                
             data = request.get_json()
+            
             log = VisitorLog()
             log.id = str(uuid.uuid4())
 
+            if is_empty(data.get("visitorName")):
+                return make_response(
+                    jsonify({
+                        "error": "The visitor's name is required."
+                    }),
+                    409
+                )
+
+            if is_empty(data.get("hostName")):
+                return make_response(
+                    jsonify({
+                        "error": "The host's name is required."
+                    }),
+                    409
+                )
+            
+            if is_empty(data.get("purpose")):
+                return make_response(
+                    jsonify({
+                        "error": "The visitor's purpose of visit is required."
+                    }),
+                    409
+                )
+
+            if is_empty(data.get("cardNumber")):
+                return make_response(
+                    jsonify({
+                        "error": "The visitor's card number is required."
+                    }),
+                    409
+                )
+            
             try:
                 log.save_data(data)
             except Exception:
@@ -53,20 +90,51 @@ def create_app(config_name):
                 201
             )
 
-        def put(self, id):
+        def put(self, id=None):
+            if not id:
+                return make_response(jsonify(error="Resource not found."), 404)
+
             log = VisitorLog.query.filter_by(id=id).first()
+
+            if not log:
+                return make_response(jsonify(error="Resource not found."), 404)
+
+            visitor_name = log.visitor_name
+            host_name = log.host_name
+            purpose = log.purpose
+            card_number = log.card_number
             body = request.get_json()
+
+            if not is_empty(body.get("visitorName")):
+                visitor_name = body.get("visitorName")
+            
+            if not is_empty(body.get("hostName")):
+                host_name = body.get("hostName")
+            
+            if not is_empty(body.get("purpose")):
+                purpose = body.get("purpose")
+            
+            if not is_empty(body.get("cardNumber")):
+                card_number = body.get("cardNumber")
+
             data = {
-                 "visitorName": body.get("visitorName", log.visitor_name),
-                "hostName": body.get("hostName", log.host_name),
-                "purpose": body.get("purpose", log.purpose),
-                "cardNumber": body.get("cardNumber", log.card_number)
+                 "visitorName": visitor_name,
+                "hostName": host_name,
+                "purpose": log.purpose,
+                "cardNumber": log.card_number
             }
             log.save_data(data)
             return jsonify(data=log.to_dict())
 
-        def delete(self, id):
+        def delete(self, id=None):
+            if not id:
+                return make_response(jsonify(error="Resource not found."), 404)
+
             log = VisitorLog.query.filter_by(id=id).first()
+
+            if not log:
+                return make_response(jsonify(error="Resource not found."), 404)
+                
             log.delete()
             return jsonify({'id': log.id})
     
