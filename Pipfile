@@ -12,6 +12,7 @@ python-dotenv = "*"
 flask-script = "*"
 "psycopg2-binary" = "*"
 flask-restful = "*"
+flask-cors = "*"
 
 [dev-packages]
 pylint = "*"

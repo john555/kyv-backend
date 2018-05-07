@@ -2,6 +2,7 @@ import uuid
 from flask import Flask, request, jsonify, json, make_response
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from .config import app_config
 from .validation import is_empty
 
@@ -11,6 +12,7 @@ def create_app(config_name):
     from .models import VisitorLog
     app = Flask(__name__)
     api = Api(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
     app.config.from_object(app_config[config_name])
     db.init_app(app)
 
@@ -139,7 +141,7 @@ def create_app(config_name):
             return jsonify({'id': log.id})
     
     api.add_resource(VisitorLogRoutes,
-                    "/api/v1/visitor-logs/",
+                    "/api/v1/visitor-logs",
                     "/api/v1/visitor-logs/<id>")
 
     return app
