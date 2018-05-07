@@ -142,6 +142,7 @@ def create_app(config_name):
     
     api.add_resource(VisitorLogRoutes,
                     "/api/v1/visitor-logs",
+                    "/api/v1/visitor-logs/",
                     "/api/v1/visitor-logs/<id>")
 
     return app

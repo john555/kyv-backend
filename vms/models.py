@@ -9,6 +9,7 @@ class VisitorLog(db.Model):
     host_name = db.Column(db.String(60), nullable=False)
     purpose = db.Column(db.String(140), nullable=False)
     card_number = db.Column(db.String(4), nullable=False)
+    signature_url = db.Column(db.Text, nullable=True)
     time_in = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
     time_out = db.Column(db.DateTime, nullable=True)
 
@@ -34,6 +35,7 @@ class VisitorLog(db.Model):
             'hostName': self.host_name,
             'purpose': self.purpose,
             'cardNumber': self.card_number,
+            'signatureUrl': self.signature_url if self.signature_url else "",
             'timeIn': str(self.time_in),
-            'timeOut': str(self.time_out)
+            'timeOut': str(self.time_out) if self.time_out else ""
         }
