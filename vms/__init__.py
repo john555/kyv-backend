@@ -1,8 +1,10 @@
-import uuid
-from flask import Flask, request, jsonify, json, make_response
+import uuid, base64
+from functools import wraps
+from flask import Flask, request, jsonify, json, make_response, current_app
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from jose import jwt
 from .config import app_config
 from .validation import is_empty
 
@@ -16,12 +18,38 @@ def create_app(config_name):
     app.config.from_object(app_config[config_name])
     db.init_app(app)
 
+    def authenticate(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            authorization_header = request.headers.get('Authorization')
+            if not authorization_header:
+                return make_response(jsonify(error="The authorization header is missing."), 403)
+            _token = str(authorization_header).split(" ")
+            token = _token[1] if len(_token) > 1 else _token[0]
+
+            if not token:
+                return make_response(jsonify(error="The authorization header is missing."), 403)
+            
+            try:
+                key = base64.b64decode(current_app.config.get("SECRET")).decode("UTF-8")
+            except Exception as e:
+                print('Invalid secret key')
+
+            try:
+                data = jwt.decode(token, key, algorithms=["RS256"], options={"verify_signature": False})
+            except Exception:
+                return make_response(jsonify(error="Invalid token."), 403)
+                
+            return f(*args, **kwargs)
+        return decorated
+
     @app.route("/")
     def index():
         return "VMS - Visitor Management System."
     
     class VisitorLogRoutes(Resource):
 
+        @authenticate
         def get(self, id=None):
             if id:
                 log = VisitorLog.query.filter_by(id=id).first()
@@ -35,6 +63,7 @@ def create_app(config_name):
                 data=[e.to_dict() for e in logs]
             )
 
+        @authenticate
         def post(self, id=None):
             if id:
                 return make_response(jsonify(error="Resource not found."), 404)
@@ -92,6 +121,7 @@ def create_app(config_name):
                 201
             )
 
+        @authenticate
         def put(self, id=None):
             if not id:
                 return make_response(jsonify(error="Resource not found."), 404)
@@ -128,6 +158,7 @@ def create_app(config_name):
             log.save_data(data)
             return jsonify(data=log.to_dict())
 
+        @authenticate
         def delete(self, id=None):
             if not id:
                 return make_response(jsonify(error="Resource not found."), 404)
